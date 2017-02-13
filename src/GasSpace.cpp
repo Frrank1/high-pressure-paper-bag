@@ -60,8 +60,6 @@ void GasSpace::clear(Volume volume){
     std::vector<Volume> parts{volume};
     std::vector<Volume> poor_fits;
 
-    // TODO remove any sections in parts that overlap with existing sectors
-
     // Let sectors take parts of the volume
     while(!parts.empty() or !poor_fits.empty()){
         // If there are no candidate parts, everything is a poor fit
