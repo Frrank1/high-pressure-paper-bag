@@ -2,7 +2,6 @@
 
 #include <unordered_set>
 #include <cassert>
-#include <iostream>
 
 //
 //
@@ -60,7 +59,10 @@ void GasGraph::step_node(Node* node, float /*delta*/){
 
         // Boost it quadratically on accord of nothing in particular
         // Air is slippery I guess?
-        ratio = 1 - (1 - ratio) * (1 - ratio);
+        ratio = (1 - (1 - ratio) * (1 - ratio));
+
+        // Make sure there is at least SOMETHING coming out of this calculation
+        // ratio = ratio * 0.95 + 0.05;
 
         // Calculate the equalibrium values
         float equal_density = (other->density() + node->density())/2.0;
@@ -70,7 +72,7 @@ void GasGraph::step_node(Node* node, float /*delta*/){
         // Get whichever is willing to change less
         float change = abs_min(here_delta, other_delta);
 
-        // TODO add in effect of delta
+        // TODO add in effect of time delta
         node->gas += change * ratio * 0.5;
         other->gas -= change * ratio * 0.5;
     }
