@@ -40,6 +40,7 @@ struct Volume {
     // one unit from being adjacent
     bool overlap(Volume) const;
     bool adjacent(Volume) const;
+    template<uint> int gap(Volume) const;
     int gap(Volume, int) const;
     float contact(Volume) const;
     bool contains(Point) const;
@@ -51,8 +52,10 @@ struct Volume {
 std::vector<Volume> operator - (const std::vector<Volume>&, Volume);
 float surface(const std::vector<Volume>&);
 float volume(const std::vector<Volume>&);
+bool adjacent(const std::vector<Volume>&, Volume);
 float contact(const std::vector<Volume>&, const std::vector<Volume>&);
 void compact(std::vector<Volume>&);
+std::vector<std::vector<Volume>> connected_components(std::vector<Volume>);
 std::ostream& operator << (std::ostream&, Volume);
 
 #endif

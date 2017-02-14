@@ -88,3 +88,17 @@ void GasGraph::set_edge(Node* a, Node* b, float surface){
     a->edges.push_back({surface, b});
     b->edges.push_back({surface, a});
 }
+
+void GasGraph::clear_edges(Node* a){
+    for(auto edge : a->edges){
+        auto other = edge.other;
+        for(uint ii = 0; ii < other->edges.size(); ii++){
+            if(other->edges[ii].other == a){
+                std::swap(other->edges[ii], other->edges.back());
+                other->edges.pop_back();
+                ii--;
+            }
+        }
+    }
+    a->edges.clear();
+}

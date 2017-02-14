@@ -44,10 +44,12 @@ protected:
     std::vector<Sector*> affected_sectors(Volume) const;
 
 protected:
-    void create_sector(Volume);
+    Sector* create_sector(Volume);
+    Sector* create_sector(const std::vector<Volume>&);
     void expand(Sector*, Volume);
-    void remove(Sector*, Volume);
+    void partition_sector(Sector*);
 
+protected:
     void update_node(Sector*);
     void update_adjacency(Sector*);
 
@@ -58,6 +60,7 @@ protected:
 protected:
     GasGraph m_graph;
     std::vector<Sector*> m_sectors;
+    const float score_threshold = -0.2;
 };
 
 #endif

@@ -46,13 +46,33 @@ void GasSpace::step(float delta){
     m_graph.step(delta);
 }
 
-// void GasSpace::block(Volume volume){
-//     for(auto sector : effected_sectors(volume)){
-//         remove(sector, volume);
-//         // TODO partition or merge the sector
-//         // TODO adjust contant betwen sectors
-//     }
-// }
+void GasSpace::block(Volume volume){
+    debug << "Blocking volume " << volume << std::endl;
+    std::unordered_set<Sector*> changed_sectors;
+
+    // Modify effected sectors
+    for(auto sector : affected_sectors(volume)){
+        auto new_parts = sector->parts - volume;
+
+        if(sector->parts != new_parts){
+            std::cout << "Blocking sector" << std::endl;
+            for(auto part : sector->parts)
+                std::cout << "-\t" << part << std::endl;
+            for(auto part : new_parts)
+                std::cout << "+\t" << part << std::endl;
+            sector->parts = new_parts;
+            changed_sectors.insert(sector);
+            compact(sector->parts);
+            update_node(sector);
+            update_adjacency(sector);
+        }
+    }
+
+    // Check for partition
+    for(auto sector : changed_sectors){
+        partition_sector(sector);
+    }
+}
 
 void GasSpace::clear(Volume volume){
     debug << "Clearing volume " << volume << std::endl;
@@ -99,7 +119,7 @@ void GasSpace::clear(Volume volume){
         }
         debug << "Make " << attempts << " attempts to fit." << std::endl;
 
-        if(best_sector){
+        if(best_sector and score > score_threshold){
             debug << "expanding " << best_sector << " with " << selected << " (" << score << ")" << std::endl;
             // Put the best section into a sector
             expand(best_sector, selected);
@@ -242,7 +262,7 @@ auto GasSpace::affected_sectors(Volume volume) const -> std::vector<Sector*>{
 //      Methods for creating/editing sectors
 //
 
-void GasSpace::create_sector(Volume space){
+GasSpace::Sector* GasSpace::create_sector(Volume space){
     // Allocate memory
     auto sector = new Sector;
     sector->node = m_graph.new_node();
@@ -255,6 +275,20 @@ void GasSpace::create_sector(Volume space){
     // put in place
     m_sectors.push_back(sector);
     update_adjacency(sector);
+    return sector;
+}
+
+GasSpace::Sector* GasSpace::create_sector(const std::vector<Volume>& space){
+    // Allocate memory
+    auto sector = new Sector;
+    sector->node = m_graph.new_node();
+    sector->parts = space;
+
+    // put in place
+    m_sectors.push_back(sector);
+    update_node(sector);
+    update_adjacency(sector);
+    return sector;
 }
 
 void GasSpace::expand(Sector* sector, Volume space){
@@ -267,6 +301,50 @@ void GasSpace::expand(Sector* sector, Volume space){
     update_adjacency(sector);
 }
 
+// There are two grounds for partitioning a sector:
+//   1. It is no longer contiguous, we need a new disconnected node.
+//   2. It has components that should actually be modeled as
+//      a separate (but connected) node in the graph.
+void GasSpace::partition_sector(Sector* sector) {
+    debug << "Partitioning: " << std::endl;
+    for(auto part : sector->parts)
+        debug << "\t" << part << std::endl;
+
+    // Check for the first condition
+    auto components = connected_components(sector->parts);
+    std::cout << "PARTS " << sector->parts.size() << " " << components.size() << std::endl;
+    if(components.size() > 1){
+        float old_density = sector->node->density();
+
+        // Reset the base sector
+        sector->parts = components.back();
+        components.pop_back();
+        update_node(sector);
+        update_adjacency(sector);
+        sector->node->gas = old_density * sector->node->volume;
+
+        // Fill in new components
+        std::vector<Sector*> new_sectors = {sector};
+        for(auto sub_section : components){
+            std::cout << "Subsection" << std::endl;
+            auto new_sector = create_sector(sub_section);
+            new_sectors.push_back(new_sector);
+            new_sector->node->gas = old_density * new_sector->node->volume;
+        }
+
+        for(auto sector : new_sectors)
+            partition_sector(sector);
+        return;
+    }
+
+    // Check for the second condition
+    // TODO
+}
+
+//
+//
+//
+
 void GasSpace::update_node(Sector* sector){
     //
     sector->node->volume = volume(sector->parts);
@@ -276,6 +354,9 @@ void GasSpace::update_node(Sector* sector){
 }
 
 void GasSpace::update_adjacency(Sector* sector){
+    // Clear existing adjacencies
+    m_graph.clear_edges(sector->node);
+
     for(auto other : adjacent_sectors(sector)){
         if(other == sector) continue;
         // Calculate the contact area between the sectors
@@ -318,28 +399,37 @@ std::tuple<float, Volume> GasSpace::choose_addition(Sector* sector, Volume input
 }
 
 float GasSpace::score_addition(Sector* sector, Volume input) const {
-    // Expanding the bounding box without filling it is bad
+    // Get the bounding box before and after the addition
+    auto bounds = sector->bounds();
+    auto new_bounds = bounds | input;
+    auto new_section = new_bounds - bounds;
 
-    // Get the new area added to the bounding box
-    auto new_box = (sector->bounds() | input) - sector->bounds();
+    // Get the stuff being added
+    // std::vector<Volume> new_parts = sector->parts;
 
-    // Take out the section that the new volume fills
-    std::vector<Volume> unfilled = new_box - input;
+    // Get some fitness measures before adding input
+    // float surface_fit = sector->node->surface / bounds.surface();
+    // float area_fit = sector->node->volume / bounds.volume();
+
+    // Get the new surface area
+    float new_surface_area = sector->node->surface;
+    // debug << new_surface_area << " ";
+    new_surface_area += input.surface();
+    // debug << new_surface_area << " ";
+    new_surface_area -= contact(sector->parts, {input});
+    // debug << new_surface_area << " " << new_bounds.surface() << std::endl;
+
+    // debug << surface_fit << std::endl;
+    // float new_surface_fit = new_surface_area / new_bounds.surface();
+    // return -new_surface_fit;
 
     float score = 0;
-
-    for(auto unfilled_part : unfilled) score -= unfilled_part.volume();
+    // Negative score for adding unused space
+    score -= volume(new_section - input) / sector->node->volume;
     // TODO include a positive effect from removing existing negative space
-
-    // Calculate what the new surface area is
-    float surface_area = sector->node->surface;
-
-    // Get the parts being added
-    std::vector<Volume> new_parts = sector->parts - input;
-    surface_area += surface(new_parts);
-    surface_area -= contact(sector->parts, new_parts);
-
-    // Expansions to the surface are bad;
-    score += sector->node->surface - surface_area;
+    //
+    //
+    // // Expansions to the surface are bad;
+    score += (sector->node->surface - new_surface_area)/sector->node->surface;
     return score;
 }

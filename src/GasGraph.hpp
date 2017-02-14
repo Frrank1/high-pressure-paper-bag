@@ -38,6 +38,7 @@ public:
     void merge_nodes(Node*, Node*);
 
     void set_edge(Node*, Node*, float);
+    void clear_edges(Node*);
     void clear_edge(Node*, Node*);
 
 protected:
