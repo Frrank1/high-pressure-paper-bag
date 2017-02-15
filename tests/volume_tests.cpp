@@ -2,6 +2,8 @@
 
 #include "Volume.hpp"
 
+// TODO break down these blocks of tests maybe?
+
 TEST(volume_tests, construction_volume_surface){
     {
         Volume v;
@@ -638,8 +640,46 @@ TEST(volume_tests, set_surface_operation){
 // TEST(volume_tests, set_contact_operation){
 // }
 
-// TEST(volume_tests, set_compact_operation){
-// }
+TEST(volume_tests, set_compact_operation){
+    {
+        std::vector<Volume> set;
+        for(int xx = 0; xx < 3; xx++)
+            for(int yy = 0; yy < 3; yy++)
+                for(int zz = 0; zz < 3; zz++)
+                    set.push_back(Volume({xx, yy, zz}, {1, 1, 1}));
+
+        compact(set);
+        // EXPECT_EQ(set.size(), 1);
+        // EXPECT_EQ(set[0].offset, Point(0, 0, 0));
+        // EXPECT_EQ(set[0].size, Size(3, 3, 3));
+        EXPECT_EQ(volume(set), 27);
+        EXPECT_EQ(surface(set), 9 * 6);
+    }
+
+    {
+        std::vector<Volume> set {
+            Volume({0, 0, 0}, {3, 3, 3}),
+            Volume({1, 1, 1}, {2, 2, 1})
+        };
+
+        compact(set);
+        EXPECT_EQ(volume(set), 27);
+        EXPECT_EQ(surface(set), 9 * 6);
+
+    }
+
+    // {
+    //     std::vector<Volume> set;
+    //     for(int xx = 0; xx < 3; xx++)
+    //         for(int yy = 0; yy < 3; yy++)
+    //             for(int zz = 0; zz < 3; zz++)
+    //                 set.push_back(Volume({xx, yy, zz}, {1, 1, 1}));
+    //     set = set - Volume({2, 2, 0}, {1, 1, 3});
+    //
+    //     compact(set);
+    //     EXPECT_EQ(set.size(), 2);
+    // }
+}
 
 int main(int argc, char *argv[]){
 	::testing::InitGoogleTest(&argc, argv);
