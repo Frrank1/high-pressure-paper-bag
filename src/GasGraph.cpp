@@ -1,5 +1,6 @@
 #include "GasGraph.hpp"
 
+#include <iostream>
 #include <unordered_set>
 #include <cassert>
 
@@ -82,6 +83,23 @@ auto GasGraph::new_node() -> Node* {
     auto node = new Node;
     m_nodes.push_back(node);
     return node;
+}
+
+void GasGraph::remove_node(Node * node){
+    // Disconnect the node from all others
+    clear_edges(node);
+
+    // Remove the node from the list
+    auto iter = std::find(m_nodes.begin(), m_nodes.end(), node);
+
+    if(iter != m_nodes.end()){
+        std::iter_swap(iter, m_nodes.rbegin());
+        m_nodes.pop_back();
+    } else {
+        // If we can't find the node issue a warning
+        // TODO setup logging with levels
+        std::cout << "Warning: Tried to free absent node?" << std::endl;
+    }
 }
 
 void GasGraph::set_edge(Node* a, Node* b, float surface){

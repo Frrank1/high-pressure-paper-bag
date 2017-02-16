@@ -53,7 +53,7 @@ public:
     // Create a new node
     Node * new_node();
     // Remove a node from the graph
-    void release_node(Node*);
+    void remove_node(Node*);
     // Merge two nodes into a single one.
     void merge_nodes(Node*, Node*);
 

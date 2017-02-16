@@ -43,6 +43,17 @@ int main(){
     print();
 
 
+    std::cout << "-------------------" << std::endl;
+    std::cout << "blocking" << std::endl;
+    space.block(Volume({0, 0, 0}, {25, 50, 50}));
+    std::cout << space.describe();
+    for(uint ii = 0; ii < 10; ii++){
+        print();
+        space.step(0.1);
+    }
+    print();
+
+
 
     return 0;
 }

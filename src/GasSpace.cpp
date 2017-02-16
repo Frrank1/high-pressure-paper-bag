@@ -54,12 +54,15 @@ void GasSpace::block(Volume volume){
     for(auto sector : affected_sectors(volume)){
         auto new_parts = sector->parts - volume;
 
-        if(sector->parts != new_parts){
-            std::cout << "Blocking sector" << std::endl;
+        if(::volume(new_parts) == 0){
+            debug << "Removing Sector " << sector << std::endl;
+            remove_sector(sector);
+        } else if(sector->parts != new_parts){
+            debug << "Blocking sector" << std::endl;
             for(auto part : sector->parts)
-                std::cout << "-\t" << part << std::endl;
+                debug << "-\t" << part << std::endl;
             for(auto part : new_parts)
-                std::cout << "+\t" << part << std::endl;
+                debug << "+\t" << part << std::endl;
             sector->parts = new_parts;
             changed_sectors.insert(sector);
             compact(sector->parts);
@@ -289,6 +292,19 @@ GasSpace::Sector* GasSpace::create_sector(const std::vector<Volume>& space){
     update_node(sector);
     update_adjacency(sector);
     return sector;
+}
+
+void GasSpace::remove_sector(Sector* sector){
+    // Remove it from the list
+    for(uint ii = 0; ii < m_sectors.size(); ii++){
+        if(m_sectors[ii] == sector){
+            std::swap(m_sectors[ii], m_sectors.back());
+            m_sectors.pop_back();
+        }
+    }
+
+    // Update the graph
+    m_graph.remove_node(sector->node);
 }
 
 void GasSpace::expand(Sector* sector, Volume space){

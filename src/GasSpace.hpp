@@ -70,6 +70,9 @@ protected:
     Sector* create_sector(Volume);
     Sector* create_sector(const std::vector<Volume>&);
 
+    // Remove a sector from the problem
+    void remove_sector(Sector*);
+
     // Add a volume to a sector
     void expand(Sector*, Volume);
 
