@@ -1,5 +1,5 @@
-#ifndef LPR_SRC_GASSPACE_HPP
-#define LPR_SRC_GASSPACE_HPP
+#ifndef HPPB_SRC_GASSPACE_HPP
+#define HPPB_SRC_GASSPACE_HPP
 
 #include "definitions.hpp"
 

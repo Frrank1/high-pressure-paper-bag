@@ -4,8 +4,8 @@
  * If these classes get any more complex I'm tempted to make this into
  * a template.
  */
-#ifndef LPR_SRC_POINT_HPP
-#define LPR_SRC_POINT_HPP
+#ifndef HPPB_SRC_POINT_HPP
+#define HPPB_SRC_POINT_HPP
 
 #include "definitions.hpp"
 

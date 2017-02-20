@@ -1,8 +1,8 @@
 /**
  *  Simple types and function definitions that don't bare their own module.
  */
-#ifndef LPR_SRC_DEFINITIONS_HPP
-#define LPR_SRC_DEFINITIONS_HPP
+#ifndef HPPB_SRC_DEFINITIONS_HPP
+#define HPPB_SRC_DEFINITIONS_HPP
 
 #include <cmath>
 #include <algorithm>

@@ -1,5 +1,5 @@
-#ifndef LPR_SRC_VOLUME_HPP
-#define LPR_SRC_VOLUME_HPP
+#ifndef HPPB_SRC_VOLUME_HPP
+#define HPPB_SRC_VOLUME_HPP
 
 #include "definitions.hpp"
 #include "Point.hpp"

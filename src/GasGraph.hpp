@@ -1,5 +1,5 @@
-#ifndef LPR_SRC_GASGRAPH_HPP
-#define LPR_SRC_GASGRAPH_HPP
+#ifndef HPPB_SRC_GASGRAPH_HPP
+#define HPPB_SRC_GASGRAPH_HPP
 
 #include "definitions.hpp"
 #include <vector>
