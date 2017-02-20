@@ -12,6 +12,10 @@ float Volume::surface() const {
     return 2*(size.x * size.y + size.x * size.z + size.y * size.z);
 }
 
+float Volume::linear_dimensions() const {
+    return size.x + size.y + size.z;
+}
+
 int Volume::xmin() const {
     return offset.x;
 }
@@ -181,9 +185,9 @@ Volume Volume::operator | (Volume o) const {
     };
 
     Size size (
-        std::max(xmax(), o.xmax()) - point.x + 2,
-        std::max(ymax(), o.ymax()) - point.y + 2,
-        std::max(zmax(), o.zmax()) - point.z + 2
+        std::max(xmax(), o.xmax()) - point.x + 1,
+        std::max(ymax(), o.ymax()) - point.y + 1,
+        std::max(zmax(), o.zmax()) - point.z + 1
     );
 
     return Volume(point, size);
@@ -219,12 +223,41 @@ int Volume::gap(Volume o) const{
     );
 }
 
+template<uint dim>
+int Volume::gap(int ii) const{
+    return std::max(
+        offset[dim] - ii,
+        ii - int(offset[dim] + size[dim])
+    );
+}
+
 int Volume::gap(Volume o, int dim) const{
     return std::max(
         offset[dim] - int(o.offset[dim] + o.size[dim]),
         o.offset[dim] - int(offset[dim] + size[dim])
     );
 }
+
+template<int axis>
+float Volume::contact(Volume o, int x) const{
+    if(gap<axis>(x) == 0 and o.gap<axis>(x)) return 0;
+
+    const uint ib = (axis + 1) % 3;
+    const uint ic = (axis + 2) % 3;
+
+    bool a = gap(o, axis) == 0;
+
+    int b = gap(o, ib);
+    int c = gap(o, ic);
+    if(a and b < 0 and c < 0){
+        return std::min(-b, int(std::min(size[ib], o.size[ib]))) *
+            std::min(-c, int(std::min(size[ic], o.size[ic])));
+    }
+    return 0;
+}
+template float Volume::contact<0>(Volume, int) const;
+template float Volume::contact<1>(Volume, int) const;
+template float Volume::contact<2>(Volume, int) const;
 
 float Volume::contact(Volume o) const{
     for(auto axis : {0, 1, 2}){
@@ -238,6 +271,22 @@ float Volume::contact(Volume o) const{
         if(a and b < 0 and c < 0){
             return std::min(-b, int(std::min(size[ib], o.size[ib]))) *
                 std::min(-c, int(std::min(size[ic], o.size[ic])));
+        }
+    }
+    return 0;
+}
+
+int Volume::contact_axis(Volume o) const{
+    for(auto axis : {0, 1, 2}){
+        uint ib = (axis + 1) % 3;
+        uint ic = (axis + 2) % 3;
+
+        bool a = gap(o, axis) == 0;
+
+        int b = gap(o, ib);
+        int c = gap(o, ic);
+        if(a and b < 0 and c < 0){
+            return a;
         }
     }
     return 0;
@@ -265,6 +314,17 @@ std::vector<Volume> operator - (const std::vector<Volume>& base, Volume o){
     return out;
 }
 
+std::vector<Volume> operator & (const std::vector<Volume>& base, Volume o){
+    std::vector<Volume> out;
+    for(auto item : base){
+        auto sub = item & o;
+        if(sub.volume() > 0)
+            out.push_back(sub);
+    }
+    return out;
+}
+
+
 // Assumes the volumes are non-overlapping
 float surface(const std::vector<Volume>& base){
     float out = 0;
@@ -274,6 +334,12 @@ float surface(const std::vector<Volume>& base){
             out -= 2.0 * base[ii].contact(base[jj]);
         }
     }
+    return out;
+}
+
+Volume bounds(const std::vector<Volume>& shape){
+    Volume out = shape.front();
+    for(auto part : shape) out = out | part;
     return out;
 }
 

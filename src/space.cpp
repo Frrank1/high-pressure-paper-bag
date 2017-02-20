@@ -4,8 +4,8 @@
 
 #include "GasSpace.hpp"
 
-int main(){
 
+int main(){
     GasSpace space;
 
     space.clear(Volume({0, 0, 0}, {50, 50, 50}));
@@ -53,6 +53,10 @@ int main(){
     }
     print();
 
+    std::cout << "-------------------" << std::endl;
+    std::cout << "blocking" << std::endl;
+    space.block(Volume({55, 5, 25}, {50, 50, 1}));
+    std::cout << space.describe();
 
 
     return 0;

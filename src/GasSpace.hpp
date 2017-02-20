@@ -92,10 +92,9 @@ protected:
 
     // Measure the effect on the quality of the sector by the addition
     // of the given volume
-    // TODO ad hoc at the moment, something more thought out needed
     float score_addition(Sector*, Volume) const;
     // Minimal reasonable value for score_addition
-    const float score_threshold = -0.2;
+    const float score_threshold = 1;
 
 protected:
     // Underlying graph that manages update to gas levels

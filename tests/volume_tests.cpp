@@ -275,8 +275,9 @@ TEST(volume_tests, bounding_operation){
     EXPECT_EQ(c.ymin(), -10);
     EXPECT_EQ(c.zmin(), -10);
 
+    EXPECT_TRUE(c.contains({9, 9, 9}));
     ASSERT_EQ(c.offset, Point(-10, -10, -10));
-    ASSERT_EQ(c.size, Size(21, 21, 21));
+    ASSERT_EQ(c.size, Size(20, 20, 20));
 }
 
 TEST(volume_tests, overlap_operation){

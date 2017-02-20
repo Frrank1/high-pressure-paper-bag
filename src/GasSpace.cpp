@@ -1,5 +1,6 @@
 
 #include "GasSpace.hpp"
+#include "score.hpp"
 
 #include <limits>
 #include <unordered_set>
@@ -354,7 +355,34 @@ void GasSpace::partition_sector(Sector* sector) {
     }
 
     // Check for the second condition
-    // TODO
+    Split split = ::score(sector->parts);
+    if(split.score < score_threshold){
+        auto bounds = ::bounds(sector->parts);
+        auto half_one = bounds;
+        half_one.size[split.axis] = split.index - half_one.offset[split.axis];
+
+        auto half_two = bounds;
+        half_two.size[split.axis] = bounds.size[split.axis] - half_one.size[split.axis];
+        half_two.offset[split.axis] = split.index;
+
+        //
+        auto shape_one = sector->parts & half_one;
+        auto shape_two = sector->parts & half_two;
+        compact(shape_one);
+        compact(shape_two);
+
+        // Reset old sector
+        sector->parts = shape_one;
+        update_node(sector);
+        update_adjacency(sector);
+
+        // Create new one
+        auto new_sector = create_sector(shape_two);
+
+        // Recurse
+        partition_sector(sector);
+        partition_sector(new_sector);
+    }
 }
 
 //
@@ -415,37 +443,7 @@ std::tuple<float, Volume> GasSpace::choose_addition(Sector* sector, Volume input
 }
 
 float GasSpace::score_addition(Sector* sector, Volume input) const {
-    // Get the bounding box before and after the addition
-    auto bounds = sector->bounds();
-    auto new_bounds = bounds | input;
-    auto new_section = new_bounds - bounds;
-
-    // Get the stuff being added
-    // std::vector<Volume> new_parts = sector->parts;
-
-    // Get some fitness measures before adding input
-    // float surface_fit = sector->node->surface / bounds.surface();
-    // float area_fit = sector->node->volume / bounds.volume();
-
-    // Get the new surface area
-    float new_surface_area = sector->node->surface;
-    // debug << new_surface_area << " ";
-    new_surface_area += input.surface();
-    // debug << new_surface_area << " ";
-    new_surface_area -= contact(sector->parts, {input});
-    // debug << new_surface_area << " " << new_bounds.surface() << std::endl;
-
-    // debug << surface_fit << std::endl;
-    // float new_surface_fit = new_surface_area / new_bounds.surface();
-    // return -new_surface_fit;
-
-    float score = 0;
-    // Negative score for adding unused space
-    score -= volume(new_section - input) / sector->node->volume;
-    // TODO include a positive effect from removing existing negative space
-    //
-    //
-    // // Expansions to the surface are bad;
-    score += (sector->node->surface - new_surface_area)/sector->node->surface;
-    return score;
+    std::vector<Volume> new_volumes = sector->parts;
+    new_volumes.push_back(input);
+    return ::score(new_volumes).score;
 }

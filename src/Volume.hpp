@@ -22,6 +22,7 @@ struct Volume {
     float volume() const;
     // Calculate the surface area of the section
     float surface() const;
+    float linear_dimensions() const;
 
     // Calculate the lowest points on each axis
     int xmin() const;
@@ -55,11 +56,15 @@ struct Volume {
 
     // Get the distance between volumes on the given axis
     template<uint> int gap(Volume) const;
+    template<uint> int gap(int) const;
     int gap(Volume, int) const;
 
     // Get the surface area in contact between volumes,
     // may assume that adjacent returns true as a precondition
+    template<int axis>
+    float contact(Volume, int) const;
     float contact(Volume) const;
+    int contact_axis(Volume) const;
 
     // Check if a point is located inside of this volume
     bool contains(Point) const;
@@ -77,9 +82,11 @@ struct Volume {
 // Return all parts of space in the given set that do not overlap with the
 // volume given
 std::vector<Volume> operator - (const std::vector<Volume>&, Volume);
+std::vector<Volume> operator & (const std::vector<Volume>&, Volume);
 
 // Calculate the external surface area of a set of volumes
 float surface(const std::vector<Volume>&);
+Volume bounds(const std::vector<Volume>&);
 
 // Calculate the total volume of a set volumes
 float volume(const std::vector<Volume>&);
