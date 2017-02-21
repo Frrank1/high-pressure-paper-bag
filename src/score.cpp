@@ -13,20 +13,31 @@
 #include <algorithm>
 #include <unordered_map>
 
+//
+// Helper functions that are limited to this module.
+//
 namespace {
+    // TODO currently using a null stream to eat logging info.
     auto debug = std::ofstream();
 
-    template <int axis> float cut_cost(const std::vector<Volume>& shape, int seam){
+    // Give the score for splitting shape on the plain defined by seam and
+    // (normal) axis parameters.
+    template <int axis> float cut_cost(const std::vector<Volume>& shape, Volume bounds, int seam){
+        // The axis on which the plane lies will be the other two since 'axis'
+        // is normal to it
         const int a1 = (axis + 1) % 3;
         const int a2 = (axis + 2) % 3;
-        auto bounds = ::bounds(shape);
 
+        // Modify the bouding box to be the cut plane
         auto cut = bounds;
         cut.offset[axis] = seam;
         cut.size[axis] = 0;
 
+        // find all the faces being crossed by the cut plane
         float cost = 0;
         for(auto part : shape){
+            // If the gap is less than zero the cut plane is inside the part
+            // (zero would mean it was just outside)
             auto gap = part.gap<axis>(cut);
             if(gap < 0){
                 cost += part.size[a1] * part.size[a2];
@@ -36,35 +47,56 @@ namespace {
         return cost;
     }
 
+    // Consider cutting the shape orthegonal to the given axis.
+    //
+    // The return is information about the cheapest cut
+    // (its cost, its score, and where it is on the axis)
+    // The cost is the "how much we don't want to do this cut" value.
+    // the score is the cost combined with a measure of possible gain from the cut
     template <int axis> std::tuple<float, float, int>
     score_axis(const std::vector<Volume>& shape){
+        // Define the axis this method will be cutting on
         debug << "axis " << axis << std::endl;
         const int a1 = (axis + 1) % 3;
         const int a2 = (axis + 2) % 3;
-        auto bounds = ::bounds(shape);
-        auto total_volume = volume(shape);
 
-        // Determine the spots where there are edges
+        // Get the information of the shape so they arn't always being recalculated
+        const auto bounds = ::bounds(shape);
+        const auto total_volume = volume(shape);
+
+        // Determine the spots where there are edges of volumes
+        // accumulate the ammount of surface area where two volumes are
+        // in contact along the plane
         std::unordered_map<int, float> cut_points;
         for(uint ii = 0; ii < shape.size(); ii++){
             auto part = shape[ii];
+            // Check the top and bottom of this shape along the axis
             for(int index : {part.offset[axis], part.offset[axis] + int(part.size[axis])}){
+                // Skip this index if it lies along the edge of the bounding box
                 if(bounds.offset[axis] < index and index + 1 < bounds.offset[axis] + int(bounds.size[axis])){
+                    // We are not along the edge of the bounding box, so accumulate
+                    // the contact area between volumes in this shape, along this
+                    // plane
                     float contact = 0;
-
                     for(uint jj = 0; jj < shape.size(); jj++){
                         if(ii == jj) continue;
+                        // See if the other shapes make contact with this part
                         auto other = shape[jj];
-
                         if(part.gap<axis>(other) == 0){
+                            // Add in contact, but only if it lies on this
+                            // plane (defined here by orthegonal 'axis' and
+                            // the offset 'index')
                             contact += part.contact<axis>(other, index);
                         }
                     }
+                    // We will see this again when we go by this again, so
+                    // half it (TODO don't go through twice)
                     cut_points[index] += contact/2.0;
                 }
             }
         }
 
+        // If there are no cut points this shape is not going to be split
         if(cut_points.empty()){
             return std::make_tuple(std::numeric_limits<float>::infinity(), std::numeric_limits<float>::infinity(), 0);
         }
@@ -73,19 +105,24 @@ namespace {
         for(auto pair : cut_points) debug << pair.first << ":" << pair.second << " ";
         debug << std::endl;
 
+        // We are going to search through the cut points and find the
+        // one with the best (lowest) price and score
         int cut_point = 0;
         float cut_price = std::numeric_limits<float>::infinity();
         float cut_score = std::numeric_limits<float>::infinity();
 
         float bound_cut = bounds.size[a1] * bounds.size[a2];
         for(auto pair : cut_points){
-            auto point_price = (cut_cost<axis>(shape, pair.first) + pair.second)/bound_cut;
+            // Get the price for cutting at this point
+            auto point_price = (cut_cost<axis>(shape, bounds, pair.first) + pair.second)/bound_cut;
             // TODO Maybe one of these
             //point_price = 1 - (1 - point_price) * (1 -point_price);
             //point_price = point_price / (1-point_price);
 
             debug << "=== Cutting at " << pair.first << " for " << point_price << std::endl;
 
+            // Define bounding volumes for the two halves created by splitting
+            // on this cut point
             auto half_one = bounds;
             half_one.size[axis] = pair.first - half_one.offset[axis];
 
@@ -93,17 +130,24 @@ namespace {
             half_two.size[axis] = bounds.size[axis] - half_one.size[axis];
             half_two.offset[axis] = pair.first;
 
+            // Calculate the percentage of the volume on either side of the
+            // cut point
             auto volume_one = volume(shape & half_one)/total_volume;
             auto volume_two = volume(shape & half_two)/total_volume;
 
+            // If we can split a shape in half we have a perfect cut
             debug << volume_one << " " << volume_two << std::endl;
-            float gain = std::min(volume_one, volume_two)/std::max(volume_one, volume_two);
-            // gain = gain / (1 - gain);
-            // gain = sigmoid(gain);
+            float quality = std::min(volume_one, volume_two)/std::max(volume_one, volume_two);
+            // quality = quality / (1 - quality);
+            // quality = sigmoid(quality);
 
-            float point_score = point_price/gain;
-            debug << gain << " " << point_score << std::endl;
+            // The over all score is a trade off betwenn the price of the cut
+            // and the quality of the cut
+            float point_score = point_price/quality;
+            debug << quality << " " << point_score << std::endl;
 
+            // Take the lowest price, if that isn't improved take the lowest
+            // score
             if(point_price < cut_price){
                 cut_price = point_price;
                 cut_point = pair.first;
@@ -122,6 +166,7 @@ namespace {
     }
 }
 
+// Find a split and give it a score
 Split score(const std::vector<Volume>& shape){
     debug << "-------------------" << std::endl;
 
