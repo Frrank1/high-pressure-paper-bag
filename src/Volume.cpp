@@ -47,6 +47,10 @@ int Volume::zmax() const {
     return offset.z + size.z - 1;
 }
 
+float Volume::center(int axis) const {
+    return offset[axis] + float(size[axis])/2.0f;
+}
+
 Volume::operator bool () const {
     return !(size.x == 0 and size.y == 0 and size.z == 0);
 }
@@ -304,6 +308,19 @@ bool Volume::contains(Point point) const {
         xmin() <= point.x && point.x <= xmax() &&
         ymin() <= point.y && point.y <= ymax() &&
         zmin() <= point.z && point.z <= zmax()
+    );
+}
+
+Volume Volume::grow(int distance) const {
+    return Volume(Point(
+            offset.x - distance,
+            offset.y - distance,
+            offset.z - distance
+        ), Size(
+            size.x + distance * 2,
+            size.y + distance * 2,
+            size.z + distance * 2
+        )
     );
 }
 

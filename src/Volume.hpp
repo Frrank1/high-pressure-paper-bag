@@ -42,6 +42,8 @@ struct Volume {
     int ymax() const;
     int zmax() const;
 
+    float center(int) const;
+
     // A volume has a false value when it has a zero
     // surface area AND volume
     operator bool () const;
@@ -75,6 +77,9 @@ struct Volume {
 
     // Check if a point is located inside of this volume
     bool contains(Point) const;
+    bool contains(Volume) const;
+
+    Volume grow(int) const;
 
     //
     Point offset;

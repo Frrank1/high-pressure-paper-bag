@@ -12,6 +12,7 @@
 
 #include "GasGraph.hpp"
 #include "Volume.hpp"
+#include "RTree.hpp"
 
 #include <tuple>
 
@@ -108,7 +109,8 @@ protected:
     GasGraph m_graph;
 
     // List of all sectors in no particular order
-    std::vector<Sector*> m_sectors;
+    std::vector<Sector*> m_sector_list;
+    RTree<Sector*> m_sector_lookup;
 };
 
 #endif

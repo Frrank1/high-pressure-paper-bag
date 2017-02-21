@@ -43,9 +43,9 @@ Volume GasSpace::Sector::bounds() const {
 GasSpace::GasSpace(){}
 
 GasSpace::~GasSpace(){
-    while(m_sectors.size() > 0){
-        delete m_sectors.back();
-        m_sectors.pop_back();
+    while(m_sector_list.size() > 0){
+        delete m_sector_list.back();
+        m_sector_list.pop_back();
     }
 }
 
@@ -172,7 +172,7 @@ void GasSpace::add_air(Point point, float value){
 //
 
 uint GasSpace::size() const {
-    return m_sectors.size();
+    return m_sector_list.size();
 }
 
 std::string GasSpace::describe() const {
@@ -180,7 +180,7 @@ std::string GasSpace::describe() const {
 
     ss << "Size: " << size() << std::endl;
 
-    for(auto sector : m_sectors){
+    for(auto sector : m_sector_list){
         ss << "Node " << sector->node << std::endl;
         ss << "Parts " << sector->parts.size() << std::endl;
         for(auto part : sector->parts)
@@ -200,42 +200,27 @@ std::string GasSpace::describe() const {
 // Currently brute force, can later be replaced by fast lookup
 
 auto GasSpace::find_sector(Point point) const -> Sector* {
-    for(auto sector : m_sectors){
-        for(auto part : sector->parts){
-            if(part.contains(point))
-                return sector;
-        }
-    }
+    auto result = m_sector_lookup.intersecting(point);
+    if(result.size() > 0)
+        return result.front();
     return nullptr;
 }
 
 std::vector<GasSpace::Sector*> GasSpace::overlapping_sectors(Volume test) const{
-    std::vector<Sector*> out;
-    for(auto sector : m_sectors){
-        bool overlap = false;
-        for(auto part : sector->parts){
-            if((part & test).volume() > 0){
-                overlap = true;
-                break;
-            }
-        }
-        if(overlap)
-            out.push_back(sector);
-    }
-    return out;
+    return m_sector_lookup.intersecting(test);
 }
 
 std::vector<GasSpace::Sector*> GasSpace::adjacent_sectors(Volume test) const{
     std::vector<Sector*> out;
-    for(auto sector : m_sectors){
-        bool overlap = false;
+    for(auto sector : m_sector_lookup.intersecting(test.grow(1))){
+        bool adjacent = false;
         for(auto part : sector->parts){
             if(part.adjacent(test)){
-                overlap = true;
+                adjacent = true;
                 break;
             }
         }
-        if(overlap)
+        if(adjacent)
             out.push_back(sector);
     }
     return out;
@@ -244,7 +229,7 @@ std::vector<GasSpace::Sector*> GasSpace::adjacent_sectors(Volume test) const{
 std::vector<GasSpace::Sector*> GasSpace::adjacent_sectors(Sector* input) const{
     std::unordered_set<Sector*> out;
     for(auto test : input->parts){
-        for(auto sector : m_sectors){
+        for(auto sector : m_sector_lookup.intersecting(test.grow(1))){
             bool overlap = false;
             for(auto part : sector->parts){
                 if(part.adjacent(test)){
@@ -283,7 +268,8 @@ GasSpace::Sector* GasSpace::create_sector(Volume space){
     sector->parts = {space};
 
     // put in place
-    m_sectors.push_back(sector);
+    m_sector_list.push_back(sector);
+    m_sector_lookup.insert(sector, sector->bounds());
     update_adjacency(sector);
     return sector;
 }
@@ -295,7 +281,8 @@ GasSpace::Sector* GasSpace::create_sector(const std::vector<Volume>& space){
     sector->parts = space;
 
     // put in place
-    m_sectors.push_back(sector);
+    m_sector_list.push_back(sector);
+    m_sector_lookup.insert(sector, sector->bounds());
     update_node(sector);
     update_adjacency(sector);
     return sector;
@@ -303,12 +290,13 @@ GasSpace::Sector* GasSpace::create_sector(const std::vector<Volume>& space){
 
 void GasSpace::remove_sector(Sector* sector){
     // Remove it from the list
-    for(uint ii = 0; ii < m_sectors.size(); ii++){
-        if(m_sectors[ii] == sector){
-            std::swap(m_sectors[ii], m_sectors.back());
-            m_sectors.pop_back();
+    for(uint ii = 0; ii < m_sector_list.size(); ii++){
+        if(m_sector_list[ii] == sector){
+            std::swap(m_sector_list[ii], m_sector_list.back());
+            m_sector_list.pop_back();
         }
     }
+    m_sector_lookup.remove(sector);
 
     // Update the graph
     m_graph.remove_node(sector->node);
