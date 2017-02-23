@@ -25,7 +25,7 @@ public:
     // by a single node in the gas graph.
     struct Sector {
         GasGraph::Node * node;
-        std::vector<Volume> parts;
+        Cluster parts;
         bool adjacent(Volume) const;
         Volume bounds() const;
     };
@@ -76,7 +76,7 @@ protected:
 protected:
     // Create a new sector covering the given space
     Sector* create_sector(Volume);
-    Sector* create_sector(const std::vector<Volume>&);
+    Sector* create_sector(const Cluster&);
 
     // Remove a sector from the problem
     void remove_sector(Sector*);

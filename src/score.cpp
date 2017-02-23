@@ -7,6 +7,7 @@
  */
 #include "score.hpp"
 #include "Volume.hpp"
+#include "Cluster.hpp"
 
 #include <fstream>
 #include <tuple>
@@ -22,7 +23,7 @@ namespace {
 
     // Give the score for splitting shape on the plain defined by seam and
     // (normal) axis parameters.
-    template <int axis> float cut_cost(const std::vector<Volume>& shape, Volume bounds, int seam){
+    template <int axis> float cut_cost(const Cluster& shape, Volume bounds, int seam){
         // The axis on which the plane lies will be the other two since 'axis'
         // is normal to it
         const int a1 = (axis + 1) % 3;
@@ -54,15 +55,15 @@ namespace {
     // The cost is the "how much we don't want to do this cut" value.
     // the score is the cost combined with a measure of possible gain from the cut
     template <int axis> std::tuple<float, float, int>
-    score_axis(const std::vector<Volume>& shape){
+    score_axis(const Cluster& shape){
         // Define the axis this method will be cutting on
         debug << "axis " << axis << std::endl;
         const int a1 = (axis + 1) % 3;
         const int a2 = (axis + 2) % 3;
 
         // Get the information of the shape so they arn't always being recalculated
-        const auto bounds = ::bounds(shape);
-        const auto total_volume = volume(shape);
+        const auto bounds = shape.bounds();
+        const auto total_volume = shape.volume();
 
         // Determine the spots where there are edges of volumes
         // accumulate the ammount of surface area where two volumes are
@@ -132,8 +133,8 @@ namespace {
 
             // Calculate the percentage of the volume on either side of the
             // cut point
-            auto volume_one = volume(shape & half_one)/total_volume;
-            auto volume_two = volume(shape & half_two)/total_volume;
+            auto volume_one = (shape & half_one).volume()/total_volume;
+            auto volume_two = (shape & half_two).volume()/total_volume;
 
             // If we can split a shape in half we have a perfect cut
             debug << volume_one << " " << volume_two << std::endl;

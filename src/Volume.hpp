@@ -14,6 +14,8 @@
 #include <vector>
 #include <iostream>
 
+class Cluster;
+
 /**
  * An axis aligned section of 3-space.
  */
@@ -49,7 +51,7 @@ struct Volume {
     operator bool () const;
 
     // parts of this not intersecting other
-    std::vector<Volume> operator - (Volume) const;
+    Cluster operator - (Volume) const;
 
     // Intersection
     Volume operator & (Volume) const;
@@ -86,34 +88,6 @@ struct Volume {
     Size size;
 };
 
-//
-//  In all operations where an assumption that volumes in a set don't
-//  overlap makes sense, that assumption is in place.
-//
-
-// Return all parts of space in the given set that do not overlap with the
-// volume given
-std::vector<Volume> operator - (const std::vector<Volume>&, Volume);
-std::vector<Volume> operator & (const std::vector<Volume>&, Volume);
-
-// Calculate the external surface area of a set of volumes
-float surface(const std::vector<Volume>&);
-Volume bounds(const std::vector<Volume>&);
-
-// Calculate the total volume of a set volumes
-float volume(const std::vector<Volume>&);
-
-// Test if a volume is adjacent to any item of the set
-bool adjacent(const std::vector<Volume>&, Volume);
-
-// Calculate the surface area in contact between two sets of volumes
-float contact(const std::vector<Volume>&, const std::vector<Volume>&);
-
-// Try to remove redundancy or merge volumes where possible
-void compact(std::vector<Volume>&);
-
-// Return the set of volumes broken into connected sections
-std::vector<std::vector<Volume>> connected_components(std::vector<Volume>);
 
 // Print a volume to an output stream
 std::ostream& operator << (std::ostream&, Volume);

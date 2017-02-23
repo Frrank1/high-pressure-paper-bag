@@ -7,6 +7,7 @@
  */
 #include "GasSpace.hpp"
 #include "score.hpp"
+#include "Cluster.hpp"
 
 #include <limits>
 #include <unordered_set>
@@ -20,19 +21,12 @@ auto& debug = std::cout;
 //
 
 bool GasSpace::Sector::adjacent(Volume volume) const {
-    bool out = false;
-    for(auto part : parts)
-        out |= part.adjacent(volume);
-    return out;
+    return parts.adjacent(volume);
 }
 
 Volume GasSpace::Sector::bounds() const {
     if(parts.empty()) return Volume();
-    Volume out = parts.front();
-    for(uint ii = 1; ii < parts.size(); ii++){
-        out = out | parts[ii];
-    }
-    return out;
+    return parts.bounds();
 }
 
 
@@ -61,7 +55,7 @@ void GasSpace::block(Volume volume){
     for(auto sector : affected_sectors(volume)){
         auto new_parts = sector->parts - volume;
 
-        if(::volume(new_parts) == 0){
+        if(new_parts.volume() == 0){
             debug << "Removing Sector " << sector << std::endl;
             remove_sector(sector);
         } else if(sector->parts != new_parts){
@@ -72,7 +66,7 @@ void GasSpace::block(Volume volume){
                 debug << "+\t" << part << std::endl;
             sector->parts = new_parts;
             changed_sectors.insert(sector);
-            compact(sector->parts);
+            sector->parts.compact();
             update_node(sector);
             update_adjacency(sector);
         }
@@ -274,7 +268,7 @@ GasSpace::Sector* GasSpace::create_sector(Volume space){
     return sector;
 }
 
-GasSpace::Sector* GasSpace::create_sector(const std::vector<Volume>& space){
+GasSpace::Sector* GasSpace::create_sector(const Cluster& space){
     // Allocate memory
     auto sector = new Sector;
     sector->node = m_graph.new_node();
@@ -304,8 +298,8 @@ void GasSpace::remove_sector(Sector* sector){
 
 void GasSpace::expand(Sector* sector, Volume space){
     //
-    sector->parts.push_back(space);
-    compact(sector->parts);
+    sector->parts.add(space);
+    sector->parts.compact();
 
     // Update all the aux data
     update_node(sector);
@@ -322,7 +316,7 @@ void GasSpace::partition_sector(Sector* sector) {
         debug << "\t" << part << std::endl;
 
     // Check for the first condition
-    auto components = connected_components(sector->parts);
+    auto components = sector->parts.connected_components();
     std::cout << "PARTS " << sector->parts.size() << " " << components.size() << std::endl;
     if(components.size() > 1){
         float old_density = sector->node->density();
@@ -349,9 +343,9 @@ void GasSpace::partition_sector(Sector* sector) {
     }
 
     // Check for the second condition
-    Split split = ::score(sector->parts);
+    Split split = ::score(sector->parts.parts());
     if(split.score < score_threshold){
-        auto bounds = ::bounds(sector->parts);
+        auto bounds = sector->parts.bounds();
         auto half_one = bounds;
         half_one.size[split.axis] = split.index - half_one.offset[split.axis];
 
@@ -362,8 +356,8 @@ void GasSpace::partition_sector(Sector* sector) {
         //
         auto shape_one = sector->parts & half_one;
         auto shape_two = sector->parts & half_two;
-        compact(shape_one);
-        compact(shape_two);
+        shape_one.compact();
+        shape_two.compact();
 
         // Reset old sector
         sector->parts = shape_one;
@@ -385,8 +379,8 @@ void GasSpace::partition_sector(Sector* sector) {
 
 void GasSpace::update_node(Sector* sector){
     //
-    sector->node->volume = volume(sector->parts);
-    sector->node->surface = surface(sector->parts);
+    sector->node->volume = sector->parts.volume();
+    sector->node->surface = sector->parts.surface();
     std::cout << "new data " << sector->node->volume
         << " " << sector->node->surface << std::endl;
 }
@@ -398,7 +392,7 @@ void GasSpace::update_adjacency(Sector* sector){
     for(auto other : adjacent_sectors(sector)){
         if(other == sector) continue;
         // Calculate the contact area between the sectors
-        float new_contact = contact(sector->parts, other->parts);
+        float new_contact = sector->parts.contact(other->parts);
         m_graph.set_edge(sector->node, other->node, new_contact);
     }
 }
@@ -437,7 +431,7 @@ std::tuple<float, Volume> GasSpace::choose_addition(Sector* sector, Volume input
 }
 
 float GasSpace::score_addition(Sector* sector, Volume input) const {
-    std::vector<Volume> new_volumes = sector->parts;
+    std::vector<Volume> new_volumes = sector->parts.parts();
     new_volumes.push_back(input);
     return ::score(new_volumes).score;
 }

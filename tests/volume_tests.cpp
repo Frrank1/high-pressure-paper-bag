@@ -1,6 +1,7 @@
 #include "gtest/gtest.h"
 
 #include "Volume.hpp"
+#include "Cluster.hpp"
 
 // TODO break down these blocks of tests maybe?
 
@@ -84,15 +85,15 @@ TEST(volume_tests, construction_volume_surface){
 TEST(volume_tests, difference_operation){
     Volume a({0, 0, 0}, {10, 10, 10});
 
-    ASSERT_EQ(surface({a}), 600);
-    ASSERT_EQ(volume({a}), 1000);
+    ASSERT_EQ(a.surface(), 600);
+    ASSERT_EQ(a.volume(), 1000);
 
     {
         Volume b({5, 0, 0}, {10, 10, 10});
         auto diff = a - b;
 
-        ASSERT_EQ(surface(diff), 400);
-        ASSERT_EQ(volume(diff), 500);
+        ASSERT_EQ(diff.surface(), 400);
+        ASSERT_EQ(diff.volume(), 500);
         ASSERT_EQ(diff.size(), 1);
         ASSERT_EQ(diff[0].offset, Point(0, 0, 0));
         ASSERT_EQ(diff[0].size, Size(5, 10, 10));
@@ -102,24 +103,24 @@ TEST(volume_tests, difference_operation){
         Volume b({5, 5, 5}, {10, 10, 10});
         auto diff = a - b;
 
-        ASSERT_EQ(surface(diff), 600);
-        ASSERT_EQ(volume(diff), 1000 * 7 / 8);
+        ASSERT_EQ(diff.surface(), 600);
+        ASSERT_EQ(diff.volume(), 1000 * 7 / 8);
     }
 
     {
         Volume b({0, 0, 0}, {5, 5, 5});
         auto diff = a - b;
 
-        ASSERT_EQ(surface(diff), 600);
-        ASSERT_EQ(volume(diff), 1000 * 7 / 8);
+        ASSERT_EQ(diff.surface(), 600);
+        ASSERT_EQ(diff.volume(), 1000 * 7 / 8);
     }
 
     {
         Volume b({5, 5, 0}, {10, 10, 10});
         auto diff = a - b;
 
-        ASSERT_EQ(surface(diff), 100 + 100 + 100 + 100 + 100 * 2 * 3 / 4);
-        ASSERT_EQ(volume(diff), 750);
+        ASSERT_EQ(diff.surface(), 100 + 100 + 100 + 100 + 100 * 2 * 3 / 4);
+        ASSERT_EQ(diff.volume(), 750);
     }
 
     {
@@ -127,8 +128,8 @@ TEST(volume_tests, difference_operation){
         Volume b({1, 1, 1}, {1, 1, 1});
         auto diff = a - b;
 
-        EXPECT_EQ(volume(diff), a.volume() - b.volume());
-        EXPECT_EQ(surface(diff), 4 * 2 + 6 * 4 + 2);
+        EXPECT_EQ(diff.volume(), a.volume() - b.volume());
+        EXPECT_EQ(diff.surface(), 4 * 2 + 6 * 4 + 2);
 
     }
     {
@@ -136,8 +137,8 @@ TEST(volume_tests, difference_operation){
         Volume b({1, 1, 1}, {1, 1, 1});
         auto diff = a - b;
 
-        EXPECT_EQ(volume(diff), a.volume() - b.volume());
-        EXPECT_EQ(surface(diff), 9 + 6 * 4 + 9 + 4);
+        EXPECT_EQ(diff.volume(), a.volume() - b.volume());
+        EXPECT_EQ(diff.surface(), 9 + 6 * 4 + 9 + 4);
     }
 
     {
@@ -145,8 +146,8 @@ TEST(volume_tests, difference_operation){
         Volume b({1, 1, 1}, {1, 1, 1});
         auto diff = a - b;
 
-        EXPECT_EQ(volume(diff), a.volume() - b.volume());
-        EXPECT_EQ(surface(diff), 9 + 6 * 4 + 9 + 4);
+        EXPECT_EQ(diff.volume(), a.volume() - b.volume());
+        EXPECT_EQ(diff.surface(), 9 + 6 * 4 + 9 + 4);
 
     }
 
@@ -155,8 +156,8 @@ TEST(volume_tests, difference_operation){
         Volume b({1, 1, 1}, {1, 1, 1});
         auto diff = a - b;
 
-        EXPECT_EQ(volume(diff), a.volume() - b.volume());
-        EXPECT_EQ(surface(diff), 9 + 6 * 4 + 9 + 4);
+        EXPECT_EQ(diff.volume(), a.volume() - b.volume());
+        EXPECT_EQ(diff.surface(), 9 + 6 * 4 + 9 + 4);
 
     }
 
@@ -165,8 +166,8 @@ TEST(volume_tests, difference_operation){
         Volume b({1, 1, 1}, {1, 1, 1});
         auto diff = a - b;
 
-        EXPECT_EQ(volume(diff), a.volume() - b.volume());
-        EXPECT_EQ(surface(diff), 9 + 6 * 4 + 9 + 4);
+        EXPECT_EQ(diff.volume(), a.volume() - b.volume());
+        EXPECT_EQ(diff.surface(), 9 + 6 * 4 + 9 + 4);
 
     }
 
@@ -175,8 +176,8 @@ TEST(volume_tests, difference_operation){
         Volume b({1, 1, 1}, {1, 1, 1});
         auto diff = a - b;
 
-        EXPECT_EQ(volume(diff), a.volume() - b.volume());
-        EXPECT_EQ(surface(diff), 9 + 6 * 4 + 9 + 4);
+        EXPECT_EQ(diff.volume(), a.volume() - b.volume());
+        EXPECT_EQ(diff.surface(), 9 + 6 * 4 + 9 + 4);
 
     }
 
@@ -185,8 +186,8 @@ TEST(volume_tests, difference_operation){
         Volume b({1, 1, 1}, {1, 1, 1});
         auto diff = a - b;
 
-        EXPECT_EQ(volume(diff), a.volume() - b.volume());
-        EXPECT_EQ(surface(diff), 9 + 6 * 4 + 9 + 4);
+        EXPECT_EQ(diff.volume(), a.volume() - b.volume());
+        EXPECT_EQ(diff.surface(), 9 + 6 * 4 + 9 + 4);
 
     }
 
@@ -195,23 +196,23 @@ TEST(volume_tests, difference_operation){
         Volume b({1, 1, 1}, {1, 1, 1});
         auto diff = a - b;
 
-        EXPECT_EQ(volume(diff), a.volume() - b.volume());
-        EXPECT_EQ(surface(diff), 9 * 6 + 6);
+        EXPECT_EQ(diff.volume(), a.volume() - b.volume());
+        EXPECT_EQ(diff.surface(), 9 * 6 + 6);
     }
 
     {
         Volume b({5, 5, 5}, {1, 1, 1});
         auto diff = a - b;
 
-        EXPECT_EQ(volume(diff), a.volume() - b.volume());
-        EXPECT_EQ(surface(diff), a.surface() + b.surface());
+        EXPECT_EQ(diff.volume(), a.volume() - b.volume());
+        EXPECT_EQ(diff.surface(), a.surface() + b.surface());
     }
     {
         Volume b({1, 1, 1}, {8, 8, 8});
         auto diff = a - b;
 
-        EXPECT_EQ(volume(diff), a.volume() - b.volume());
-        EXPECT_EQ(surface(diff), a.surface() + b.surface());
+        EXPECT_EQ(diff.volume(), a.volume() - b.volume());
+        EXPECT_EQ(diff.surface(), a.surface() + b.surface());
     }
 
     {
@@ -252,6 +253,41 @@ TEST(volume_tests, difference_operation){
         ASSERT_EQ(diff.size(), 1);
         EXPECT_EQ(diff[0].offset, a.offset);
         EXPECT_EQ(diff[0].size, a.size);
+    }
+
+    {
+        Volume a({0, 0, 0}, {2, 10, 10});
+        Volume b({5, 5, 5}, {10, 10, 10});
+        auto diff = a - b;
+
+        ASSERT_EQ(diff.size(), 1);
+        EXPECT_EQ(diff[0].offset, a.offset);
+        EXPECT_EQ(diff[0].size, a.size);
+    }
+    {
+        Volume a({2, 0, 0}, {2, 10, 10});
+        Volume b({5, 5, 5}, {10, 10, 10});
+        auto diff = a - b;
+
+        ASSERT_EQ(diff.size(), 1);
+        EXPECT_EQ(diff[0].offset, a.offset);
+        EXPECT_EQ(diff[0].size, a.size);
+    }
+    {
+        Volume a({4, 0, 0}, {4, 10, 10});
+        Volume b({5, 5, 5}, {10, 10, 10});
+        auto diff = a - b;
+
+        EXPECT_EQ(a.surface(), diff.surface());
+        EXPECT_EQ(a.volume() - 5 * 5 * 3, diff.volume());
+    }
+    {
+        Volume a({8, 0, 0}, {2, 10, 10});
+        Volume b({5, 5, 5}, {10, 10, 10});
+        auto diff = a - b;
+
+        EXPECT_EQ(2 * 10 * 4 + 5 * 5 * 6, diff.surface());
+        EXPECT_EQ(a.volume()  * 3 / 4, diff.volume());
     }
 }
 
@@ -470,37 +506,38 @@ TEST(volume_tests, contact_operation){
 // }
 
 TEST(volume_tests, set_difference_operation){
-    std::vector<Volume> a {
+    Cluster a {
         Volume({0, 0, 0}, {2, 10, 10}),
         Volume({2, 0, 0}, {2, 10, 10}),
         Volume({4, 0, 0}, {4, 10, 10}),
         Volume({8, 0, 0}, {2, 10, 10})
     };
 
-    ASSERT_EQ(surface(a), 600);
-    ASSERT_EQ(volume(a), 1000);
+    ASSERT_EQ(a.surface(), 600);
+    ASSERT_EQ(a.volume(), 1000);
 
     {
         Volume b({5, 0, 0}, {10, 10, 10});
         auto diff = a - b;
 
-        ASSERT_EQ(surface(diff), 400);
-        ASSERT_EQ(volume(diff), 500);
+        ASSERT_EQ(diff.surface(), 400);
+        ASSERT_EQ(diff.volume(), 500);
     }
 
     {
         Volume b({5, 5, 5}, {10, 10, 10});
         auto diff = a - b;
-        ASSERT_EQ(surface(diff), 600);
-        ASSERT_EQ(volume(diff), 1000 * 7 / 8);
+
+        ASSERT_EQ(diff.surface(), 600);
+        ASSERT_EQ(diff.volume(), 1000 * 7 / 8);
     }
 
     {
         Volume b({5, 5, 0}, {10, 10, 10});
         auto diff = a - b;
 
-        ASSERT_EQ(surface(diff), 100 + 100 + 100 + 100 + 100 * 2 * 3 / 4);
-        ASSERT_EQ(volume(diff), 750);
+        ASSERT_EQ(diff.surface(), 100 + 100 + 100 + 100 + 100 * 2 * 3 / 4);
+        ASSERT_EQ(diff.volume(), 750);
     }
 }
 
@@ -510,7 +547,7 @@ TEST(volume_tests, set_surface_operation){
         Volume b({1, 0, 0}, {1, 1, 1});
         Volume c({2, 0, 0}, {1, 1, 1});
 
-        ASSERT_EQ(surface({a, b, c}), 3 * 4 + 2);
+        ASSERT_EQ(Cluster({a, b, c}).surface(), 3 * 4 + 2);
     }
 
     {
@@ -518,7 +555,7 @@ TEST(volume_tests, set_surface_operation){
         Volume b({1, 0, 0}, {1, 1, 1});
         Volume c({0, 1, 0}, {1, 1, 1});
 
-        ASSERT_EQ(surface({a, b, c}), 3 + 3 + 2 * 4);
+        ASSERT_EQ(Cluster({a, b, c}).surface(), 3 + 3 + 2 * 4);
     }
 
     {
@@ -527,7 +564,7 @@ TEST(volume_tests, set_surface_operation){
         Volume c({0, 1, 0}, {1, 1, 1});
         Volume d({-1, 0, 0}, {1, 1, 1});
 
-        ASSERT_EQ(surface({a, b, c, d}), 4 * 2 + 3 * 2 + 2 * 2);
+        ASSERT_EQ(Cluster({a, b, c, d}).surface(), 4 * 2 + 3 * 2 + 2 * 2);
     }
 
     {
@@ -537,7 +574,7 @@ TEST(volume_tests, set_surface_operation){
                 for(int zz = 0; zz < 1; zz++)
                     set.push_back(Volume({xx, yy, zz}, {1, 1, 1}));
 
-        EXPECT_EQ(surface(set), 5 * 4 + 2);
+        EXPECT_EQ(Cluster(set).surface(), 5 * 4 + 2);
     }
 
     {
@@ -547,7 +584,7 @@ TEST(volume_tests, set_surface_operation){
                 for(int zz = 0; zz < 1; zz++)
                     set.push_back(Volume({xx, yy, zz}, {1, 1, 1}));
 
-        EXPECT_EQ(surface(set), 10 * 4 + 2);
+        EXPECT_EQ(Cluster(set).surface(), 10 * 4 + 2);
     }
 
     {
@@ -557,7 +594,7 @@ TEST(volume_tests, set_surface_operation){
                 for(int zz = 0; zz < 1; zz++)
                     set.push_back(Volume({xx, yy, zz}, {1, 1, 1}));
 
-        EXPECT_EQ(surface(set), 4 * 2 + 2 * 4);
+        EXPECT_EQ(Cluster(set).surface(), 4 * 2 + 2 * 4);
     }
 
     {
@@ -568,7 +605,7 @@ TEST(volume_tests, set_surface_operation){
                     set.push_back(Volume({xx, yy, zz}, {1, 1, 1}));
         set.push_back(Volume({2, 0, 0}, {1, 1, 1}));
 
-        EXPECT_EQ(surface(set), 5 * 2 + 3 * 2 + 2 * 2);
+        EXPECT_EQ(Cluster(set).surface(), 5 * 2 + 3 * 2 + 2 * 2);
     }
 
     {
@@ -578,7 +615,7 @@ TEST(volume_tests, set_surface_operation){
                 for(int zz = 0; zz < 1; zz++)
                     set.push_back(Volume({xx, yy, zz}, {1, 1, 1}));
 
-        EXPECT_EQ(surface(set), 6 + 6 + 3 + 3 + 2 + 2);
+        EXPECT_EQ(Cluster(set).surface(), 6 + 6 + 3 + 3 + 2 + 2);
     }
 
 
@@ -589,7 +626,7 @@ TEST(volume_tests, set_surface_operation){
                 for(int zz = 0; zz < 2; zz++)
                     set.push_back(Volume({xx, yy, zz}, {1, 1, 1}));
 
-        EXPECT_EQ(surface(set), 2 * 2 * 6);
+        EXPECT_EQ(Cluster(set).surface(), 2 * 2 * 6);
     }
 
     {
@@ -599,7 +636,7 @@ TEST(volume_tests, set_surface_operation){
                 for(int zz = 0; zz < 2; zz++)
                     set.push_back(Volume({xx, yy, zz}, {1, 1, 1}));
 
-        EXPECT_EQ(surface(set), 3 * 3 * 2 + 2 * 3 * 4);
+        EXPECT_EQ(Cluster(set).surface(), 3 * 3 * 2 + 2 * 3 * 4);
     }
 
     {
@@ -609,7 +646,7 @@ TEST(volume_tests, set_surface_operation){
                 for(int zz = 0; zz < 3; zz++)
                     set.push_back(Volume({xx, yy, zz}, {1, 1, 1}));
 
-        EXPECT_EQ(surface(set), 3 * 3 * 6);
+        EXPECT_EQ(Cluster(set).surface(), 3 * 3 * 6);
     }
 
     {
@@ -619,7 +656,7 @@ TEST(volume_tests, set_surface_operation){
                 for(int zz = 0; zz < 3; zz++)
                     set.push_back(Volume({xx*3, yy*3, zz*3}, {3, 3, 3}));
 
-        EXPECT_EQ(surface(set), 9 * 9 * 6);
+        EXPECT_EQ(Cluster(set).surface(), 9 * 9 * 6);
     }
 
     {
@@ -631,7 +668,7 @@ TEST(volume_tests, set_surface_operation){
         std::swap(set[13], set.back());
         set.pop_back();
 
-        EXPECT_EQ(surface(set), 9 * 9 * 6 + 6 * 9);
+        EXPECT_EQ(Cluster(set).surface(), 9 * 9 * 6 + 6 * 9);
     }
 }
 
@@ -643,29 +680,29 @@ TEST(volume_tests, set_surface_operation){
 
 TEST(volume_tests, set_compact_operation){
     {
-        std::vector<Volume> set;
+        Cluster set;
         for(int xx = 0; xx < 3; xx++)
             for(int yy = 0; yy < 3; yy++)
                 for(int zz = 0; zz < 3; zz++)
-                    set.push_back(Volume({xx, yy, zz}, {1, 1, 1}));
+                    set.add(Volume({xx, yy, zz}, {1, 1, 1}));
 
-        compact(set);
+        set.compact();
         // EXPECT_EQ(set.size(), 1);
         // EXPECT_EQ(set[0].offset, Point(0, 0, 0));
         // EXPECT_EQ(set[0].size, Size(3, 3, 3));
-        EXPECT_EQ(volume(set), 27);
-        EXPECT_EQ(surface(set), 9 * 6);
+        EXPECT_EQ(set.volume(), 27);
+        EXPECT_EQ(set.surface(), 9 * 6);
     }
 
     {
-        std::vector<Volume> set {
+        Cluster set {
             Volume({0, 0, 0}, {3, 3, 3}),
             Volume({1, 1, 1}, {2, 2, 1})
         };
 
-        compact(set);
-        EXPECT_EQ(volume(set), 27);
-        EXPECT_EQ(surface(set), 9 * 6);
+        set.compact();
+        EXPECT_EQ(set.volume(), 27);
+        EXPECT_EQ(set.surface(), 9 * 6);
 
     }
 
@@ -681,6 +718,8 @@ TEST(volume_tests, set_compact_operation){
     //     EXPECT_EQ(set.size(), 2);
     // }
 }
+
+
 
 int main(int argc, char *argv[]){
 	::testing::InitGoogleTest(&argc, argv);

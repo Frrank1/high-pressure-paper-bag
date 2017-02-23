@@ -17,6 +17,7 @@
 
 #include <vector>
 class Volume;
+class Cluster;
 
 struct Split {
     // Quality of the shape before splitting.

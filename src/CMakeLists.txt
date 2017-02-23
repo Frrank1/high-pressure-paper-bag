@@ -19,5 +19,5 @@ project (low-pressure-riot)
 add_executable(graph graph.cpp GasGraph.cpp)
 set_target_properties(graph PROPERTIES RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR})
 
-add_executable(space space.cpp GasGraph.cpp GasSpace.cpp Volume.cpp Point.cpp score.cpp)
+add_executable(space space.cpp GasGraph.cpp GasSpace.cpp Volume.cpp Point.cpp score.cpp Cluster.cpp)
 set_target_properties(space PROPERTIES RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR})

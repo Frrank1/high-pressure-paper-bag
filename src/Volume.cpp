@@ -6,6 +6,7 @@
  * Copyright 2017 Adam Douglass
  */
 #include "Volume.hpp"
+#include "Cluster.hpp"
 
 //
 //  Trivially read operations
@@ -91,7 +92,7 @@ auto& debug = std::cout;
 
 // parts of this not intersecting other
 // TODO refactor
-std::vector<Volume> Volume::operator - (Volume o) const {
+Cluster Volume::operator - (Volume o) const {
     if(!overlap(o)) return {*this};
     std::vector<Volume> out;
 
@@ -322,175 +323,6 @@ Volume Volume::grow(int distance) const {
             size.z + distance * 2
         )
     );
-}
-
-//
-//      Operations over sets of volumes
-//
-
-std::vector<Volume> operator - (const std::vector<Volume>& base, Volume o){
-    std::vector<Volume> out;
-    for(auto item : base){
-        for(auto sub : item - o)
-            if(sub.volume() > 0)
-                out.push_back(sub);
-    }
-    return out;
-}
-
-std::vector<Volume> operator & (const std::vector<Volume>& base, Volume o){
-    std::vector<Volume> out;
-    for(auto item : base){
-        auto sub = item & o;
-        if(sub.volume() > 0)
-            out.push_back(sub);
-    }
-    return out;
-}
-
-
-// Assumes the volumes are non-overlapping
-float surface(const std::vector<Volume>& base){
-    float out = 0;
-    for(uint ii = 0; ii < base.size(); ii++){
-        out += base[ii].surface();
-        for(uint jj = ii + 1; jj < base.size(); jj++){
-            out -= 2.0 * base[ii].contact(base[jj]);
-        }
-    }
-    return out;
-}
-
-Volume bounds(const std::vector<Volume>& shape){
-    Volume out = shape.front();
-    for(auto part : shape) out = out | part;
-    return out;
-}
-
-// Assumes the volumes are non-overlapping
-float volume(const std::vector<Volume>& collection) {
-    float out = 0;
-    for(auto volume : collection){
-        out += volume.volume();
-    }
-    return out;
-}
-
-bool adjacent(const std::vector<Volume>& base, Volume other){
-    for(auto part : base){
-        if(part.adjacent(other))
-            return true;
-    }
-    return false;
-}
-
-float contact(const std::vector<Volume>& a, const std::vector<Volume>& b){
-    float out = 0;
-    for(auto a_part : a){
-        for(auto b_part : b){
-            out += a_part.contact(b_part);
-        }
-    }
-    return out;
-}
-
-namespace {
-    // Helper functions for the compact function
-    bool can_merge(Volume a, Volume b){
-        bool dim_x = a.offset.x == b.offset.x && a.size.x == b.size.x;
-        bool dim_y = a.offset.y == b.offset.y && a.size.y == b.size.y;
-        bool dim_z = a.offset.z == b.offset.z && a.size.z == b.size.z;
-        return (dim_x && dim_y && a.gap<2>(b) == 0)
-            || (dim_x && dim_z && a.gap<1>(b) == 0)
-            || (dim_y && dim_z && a.gap<0>(b) == 0);
-    }
-
-    Volume merge_volumes(Volume a, Volume b){
-        bool dim_x = a.offset.x == b.offset.x && a.size.x == b.size.x;
-        bool dim_y = a.offset.y == b.offset.y && a.size.y == b.size.y;
-        bool dim_z = a.offset.z == b.offset.z && a.size.z == b.size.z;
-        if(dim_x && dim_y && a.gap<2>(b) == 0){
-            return Volume({a.offset.x, a.offset.y, std::min(a.offset.z, b.offset.z)},
-                          {a.size.x, a.size.y, a.size.z + b.size.z});
-        } else if(dim_x && dim_z && a.gap<1>(b) == 0){
-            return Volume({a.offset.x, std::min(a.offset.y, b.offset.y), a.offset.z},
-                          {a.size.x, a.size.y + b.size.y, a.size.z});
-        } else if(dim_y && dim_z && a.gap<0>(b) == 0){
-            return Volume({std::min(a.offset.x, b.offset.x), a.offset.y, a.offset.z},
-                          {a.size.x + b.size.x, a.size.y, a.size.z});
-        }
-        return a;
-    }
-
-    void remove(std::vector<Volume>& collection, int index){
-        std::swap(collection[index], collection.back());
-        collection.pop_back();
-    }
-};
-
-// Remove redundant components and merge all volumes togeather
-// Could use a space partitioning structure to make this faster/better
-void compact(std::vector<Volume>& collection){
-    // Remove overlapping parts
-    for(int ii = 0; ii < int(collection.size()); ii++){
-        for(int jj = ii + 1; jj < int(collection.size()); jj++){
-            if(collection[ii].overlap(collection[jj])){
-                for(auto part : collection[jj] - collection[ii])
-                    if(part.volume() > 0)
-                        collection.push_back(part);
-                remove(collection, jj);
-                jj--;
-            }
-        }
-    }
-
-    // This merges the parts of components
-    bool improving = true;
-    while(improving){
-        improving = false;
-        for(int ii = 0; ii < int(collection.size()); ii++){
-            for(int jj = ii + 1; jj < int(collection.size()); jj++){
-                if(can_merge(collection[ii], collection[jj])){
-                    collection[ii] = merge_volumes(collection[ii], collection[jj]);
-                    remove(collection, jj);
-                    ii--;
-                    improving = true;
-                    break;
-                }
-            }
-        }
-    }
-}
-
-std::vector<std::vector<Volume>> connected_components(std::vector<Volume> input){
-    std::vector<std::vector<Volume>> output;
-    std::vector<Volume> current = {input.back()};
-    input.pop_back();
-
-    while(input.size() > 0){
-        int found = -1;
-        for(uint ii = 0; ii < input.size(); ii++){
-            if(adjacent(current, input[ii])){
-                found = ii;
-                break;
-            }
-        }
-
-        if(found == -1){
-            output.push_back(current);
-            current = {input.back()};
-            input.pop_back();
-        } else {
-            current.push_back(input[found]);
-            std::swap(input[found], input.back());
-            input.pop_back();
-        }
-    }
-
-    if(current.size() > 0)
-        output.push_back(current);
-
-    return output;
 }
 
 std::ostream& operator << (std::ostream& out, Volume item){

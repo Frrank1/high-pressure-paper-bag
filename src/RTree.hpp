@@ -18,6 +18,7 @@
 #include <unordered_map>
 
 #include "Volume.hpp"
+#include "Cluster.hpp"
 
 #define RTREE_TEMPLATE template <class Type, int Dimensions, int MinChildren, int MaxChildren>
 #define RTREE_CLASS RTree<Type, Dimensions, MinChildren, MaxChildren>
@@ -325,7 +326,7 @@ uint RTREENODE_CLASS::real_size() const {
 
 RTREE_TEMPLATE
 int64_t RTREENODE_CLASS::expansion(Volume bounds) const {
-    return volume((bounds | m_bounds) - m_bounds);
+    return ((bounds | m_bounds) - m_bounds).volume();
 }
 
 RTREE_TEMPLATE
