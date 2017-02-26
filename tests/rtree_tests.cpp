@@ -14,7 +14,7 @@ std::vector<int> brute_force(const std::vector<Volume>& volumes, Volume bounds){
     return out;
 }
 
-TEST(volume_tests, insert_against_brute_force){
+TEST(rtree_tests, insert_against_brute_force){
     // Get a long sequence of numbers
     std::mt19937_64 prng(10);
     std::uniform_int_distribution<> size_distribution(1, 100);
@@ -47,7 +47,7 @@ TEST(volume_tests, insert_against_brute_force){
     }
 }
 
-TEST(volume_tests, remove_against_brute_force){
+TEST(rtree_tests, remove_against_brute_force){
     // Get a long sequence of numbers
     std::mt19937_64 prng(10);
     std::uniform_int_distribution<> size_distribution(1, 100);
@@ -85,9 +85,4 @@ TEST(volume_tests, remove_against_brute_force){
         std::sort(result.begin(), result.end());
         ASSERT_EQ(target, result);
     }
-}
-
-int main(int argc, char *argv[]){
-	::testing::InitGoogleTest(&argc, argv);
-	return RUN_ALL_TESTS();
 }

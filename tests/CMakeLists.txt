@@ -6,10 +6,7 @@ if(MSYS OR CMAKE_COMPILER_IS_GNUCXX)
 endif()
 
 # TODO replace these relative paths with the proper cmake macros
-add_executable(volume_tests volume_tests.cpp ../src/Volume.cpp ../src/Point.cpp ../src/Cluster.cpp)
-target_include_directories(volume_tests PRIVATE "../src")
-target_link_libraries(volume_tests "gtest")
-
-add_executable(rtree_tests rtree_tests.cpp ../src/Volume.cpp ../src/Point.cpp ../src/Cluster.cpp)
-target_include_directories(rtree_tests PRIVATE "../src")
-target_link_libraries(rtree_tests "gtest")
+add_executable(run_tests run_tests.cpp rtree_tests.cpp volume_tests.cpp ../src/Volume.cpp ../src/Point.cpp ../src/Cluster.cpp)
+target_include_directories(run_tests PRIVATE "../src")
+target_link_libraries(run_tests "gtest")
+set_target_properties(run_tests PROPERTIES RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR})

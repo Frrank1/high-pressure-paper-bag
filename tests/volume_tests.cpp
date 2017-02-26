@@ -718,10 +718,3 @@ TEST(volume_tests, set_compact_operation){
     //     EXPECT_EQ(set.size(), 2);
     // }
 }
-
-
-
-int main(int argc, char *argv[]){
-	::testing::InitGoogleTest(&argc, argv);
-	return RUN_ALL_TESTS();
-}
