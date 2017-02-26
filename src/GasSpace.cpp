@@ -34,7 +34,7 @@ Volume GasSpace::Sector::bounds() const {
 //
 //
 
-GasSpace::GasSpace(){}
+GasSpace::GasSpace(uint seed) : m_graph(seed) {}
 
 GasSpace::~GasSpace(){
     while(m_sector_list.size() > 0){
@@ -157,7 +157,7 @@ float GasSpace::air_at(Point point) const {
 void GasSpace::add_air(Point point, float value){
     auto sector = find_sector(point);
     if(sector){
-        sector->node->gas += value;
+        sector->node->gas_mass += value;
     }
 }
 
@@ -326,7 +326,7 @@ void GasSpace::partition_sector(Sector* sector) {
         components.pop_back();
         update_node(sector);
         update_adjacency(sector);
-        sector->node->gas = old_density * sector->node->volume;
+        sector->node->gas_mass = old_density * sector->node->volume;
 
         // Fill in new components
         std::vector<Sector*> new_sectors = {sector};
@@ -334,7 +334,7 @@ void GasSpace::partition_sector(Sector* sector) {
             std::cout << "Subsection" << std::endl;
             auto new_sector = create_sector(sub_section);
             new_sectors.push_back(new_sector);
-            new_sector->node->gas = old_density * new_sector->node->volume;
+            new_sector->node->gas_mass = old_density * new_sector->node->volume;
         }
 
         for(auto sector : new_sectors)

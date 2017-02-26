@@ -12,7 +12,7 @@
 
 
 int main(){
-    GasSpace space;
+    GasSpace space(0);
 
     space.clear(Volume({0, 0, 0}, {50, 50, 50}));
     space.clear(Volume({50, 0, 0}, {5, 5, 5}));

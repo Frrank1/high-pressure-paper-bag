@@ -10,6 +10,7 @@
 
 #include "definitions.hpp"
 #include <vector>
+#include <random>
 
 /**
  * Manages a very simple network of gas bubbles with gas moving between
@@ -22,7 +23,7 @@ public:
 
     // Node in the gas graph
     struct Node {
-        float gas = 0;
+        float gas_mass = 0;
 
         // Track the size and shape of the node
         float volume = 0;
@@ -33,6 +34,7 @@ public:
 
         // Simple method to calculate density of gas in this pocket
         float density() const;
+        float pressure() const;
     };
 
     // An edge between nodes
@@ -41,11 +43,15 @@ public:
         // and the other node
         float surface;
         Node * other;
+
+        // TODO Needs to be symetric
+        float acceleration = 0;
+        float velocity = 0;
     };
 
 public:
     // Construct/Deconstruct
-    GasGraph();
+    GasGraph(uint);
     ~GasGraph();
 
 public:
@@ -75,6 +81,9 @@ public:
 
 protected:
     std::vector<Node*> m_nodes;
+    const float almost_nothing = 1e-4;
+    std::mt19937 m_prng;
+
 };
 
 #endif

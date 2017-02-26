@@ -165,6 +165,8 @@ namespace {
 
         return std::make_tuple(cut_price, cut_score, cut_point);
     }
+
+    template std::tuple<float, float, int> score_axis<0>(const Cluster& shape);
 }
 
 // Find a split and give it a score

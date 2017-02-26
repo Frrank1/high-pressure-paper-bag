@@ -32,7 +32,7 @@ public:
 
 public:
     // Construct/Destruct
-    GasSpace();
+    GasSpace(uint);
     ~GasSpace();
 
 public:
