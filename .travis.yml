@@ -8,12 +8,17 @@ addons:
   apt:
     sources:
       - george-edison55-precise-backports
+      - ubuntu-toolchain-r-test
     packages:
       - libgtest-dev
       - cmake
       - cmake-data
+      - gcc-6
+      - g++-6
 
 install:
+  - export CC=gcc-6
+  - export CXX=g++-6
   - mkdir ~/gtest
   - cd ~/gtest
   - export LIBRARY_PATH=$(pwd)
