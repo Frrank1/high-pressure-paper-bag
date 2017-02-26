@@ -7,10 +7,11 @@ compiler:
 addons:
   apt:
     sources:
-      - george-edison55
+      - george-edison55-precise-backports
     packages:
       - libgtest-dev
       - cmake
+      - cmake-data
 
 install:
   - mkdir ~/gtest
