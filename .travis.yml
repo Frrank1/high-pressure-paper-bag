@@ -18,7 +18,6 @@ addons:
 
 before_install:
   - pip install --user cpp-coveralls pyyaml
-  - gcov --version
 
 install:
   - export CC=gcc-6
@@ -36,4 +35,4 @@ script:
   - make
   - ./run_tests
   - cd -
-  - coveralls --exclude lib --exclude tests --gcov-options '\-lp'
+  - coveralls --exclude lib --exclude tests --gcov gcov-6 --gcov-options '\-lp'
