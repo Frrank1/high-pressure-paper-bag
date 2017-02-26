@@ -6,8 +6,11 @@ compiler:
 
 addons:
   apt:
+    sources:
+      - george-edison55
     packages:
       - libgtest-dev
+      - cmake
 
 install:
   - mkdir ~/gtest
