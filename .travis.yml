@@ -17,7 +17,7 @@ addons:
       - g++-6
 
 before_install:
-  - pip install --user cpp-coveralls pyyaml
+  - pip install --user urllib3[secure] cpp-coveralls pyyaml
 
 install:
   - export CC=gcc-6
