@@ -234,6 +234,9 @@ int Volume::gap(Volume o) const{
         o.offset[dim] - int(offset[dim] + size[dim])
     );
 }
+template int Volume::gap<0>(Volume) const;
+template int Volume::gap<1>(Volume) const;
+template int Volume::gap<2>(Volume) const;
 
 template<uint dim>
 int Volume::gap(int ii) const{
@@ -242,6 +245,9 @@ int Volume::gap(int ii) const{
         ii - int(offset[dim] + size[dim])
     );
 }
+template int Volume::gap<0>(int) const;
+template int Volume::gap<1>(int) const;
+template int Volume::gap<2>(int) const;
 
 int Volume::gap(Volume o, int dim) const{
     return std::max(
