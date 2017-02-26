@@ -6,7 +6,11 @@ find_package(Threads REQUIRED)
 
 # Compiler options for gcc on windows via MSYS
 if(MSYS OR CMAKE_COMPILER_IS_GNUCXX)
-	set(CMAKE_CXX_FLAGS "-Wall -Wextra -g")
+	set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -Wextra -g -Og ")
+	SET(GCC_COVERAGE_COMPILE_FLAGS "-coverage -fprofile-arcs -ftest-coverage")
+	SET(GCC_COVERAGE_LINK_FLAGS    "-coverage -lgcov")
+	SET( CMAKE_CXX_FLAGS  "${CMAKE_CXX_FLAGS} ${GCC_COVERAGE_COMPILE_FLAGS}" )
+	SET( CMAKE_EXE_LINKER_FLAGS  "${CMAKE_EXE_LINKER_FLAGS} ${GCC_COVERAGE_LINK_FLAGS}" )
 endif()
 
 # TODO replace these relative paths with the proper cmake macros
