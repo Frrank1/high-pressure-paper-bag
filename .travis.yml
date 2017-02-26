@@ -17,7 +17,8 @@ addons:
       - g++-6
 
 before_install:
-  - pip install --user cpp-coveralls
+  - pip install --user cpp-coveralls pyyaml
+  - gcov --version
 
 install:
   - export CC=gcc-6
